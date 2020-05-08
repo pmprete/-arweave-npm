@@ -1,0 +1,10 @@
+{
+  "generator-verdaccio-plugin": {
+    "promptValues": {
+      "lang": "typescript",
+      "pluginType": "storage",
+      "authorName": "Pedro Prete",
+      "authorEmail": "pmprete@thinkanddev.com"
+    }
+  }
+}
