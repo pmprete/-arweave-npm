@@ -13,6 +13,7 @@
   "dependencies": {
     "@verdaccio/commons-api": "^8.5.0",
     "@verdaccio/streams": "^8.5.2",
+    "arql-ops": "^1.0.0",
     "arweave": "^1.7.0"
   },
   "devDependencies": {
@@ -30,7 +31,7 @@
     "typescript": "^3.7.2"
   },
   "keywords": [
-    "arwave,npm,verdaccio,plugin,storage,datastore,permaweb,verdaccio-"
+    "arwave,npm,verdaccio,plugin,storage,datastore,permaweb,verdaccio-arwave"
   ],
   "license": "MIT",
   "repository": "pmprete/verdaccio-arwave",
