@@ -104,7 +104,7 @@ export default class ArweaveStorage implements IArweaveStorage {
     }
     const txHashList = await this.runQuery(myQuery);
     const result = await Promise.all(txHashList.map((txHash) => { 
-      return this.arweave.transactions.getData(txHash, {decode: true, string: true}); 
+      return String(this.arweave.transactions.getData(txHash, {decode: true, string: true})); 
     }));
     return result;
   }

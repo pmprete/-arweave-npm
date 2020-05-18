@@ -20,9 +20,7 @@ import ArweavePackageManager from './arweave-package-manager';
 
 import fs from 'fs';
 import Arweave from 'arweave/node';
-import { and, or, equals } from 'arql-ops';
 import ArweaveStorage from './arweave-storage';
-import Transaction from 'arweave/node/lib/transaction';
 
 export default class ArweavePluginStorage implements IPluginStorage<ArweaveConfig> {
   config: ArweaveConfig & Config;
@@ -75,28 +73,28 @@ export default class ArweavePluginStorage implements IPluginStorage<ArweaveConfi
    * @return {Error|*}
    */
   public add(name: string, cb: Callback): void {
-    this.logger.debug({ name },'arwave: [plugin add] @{name} init');
+    this.logger.debug({ name },'arweave: [plugin add] @{name} init');
     this.arweaveStorage.getPackageTxByFileName(name, 'name', this.storageAddress)
     .then(async (names: string[]) => {
-      this.logger.trace({ names }, 'arwave: [plugin add] look for names @{names}');
+      this.logger.trace({ names }, 'arweave: [plugin add] look for names @{names}');
       if(names[0]) {
-        this.logger.debug({ names }, 'arwave: [plugin add] already exists');
+        this.logger.debug({ names }, 'arweave: [plugin add] already exists');
         cb(null);
         return;
       }
-      this.logger.trace('arwave: [plugin add] create transaction init');
+      this.logger.trace('arweave: [plugin add] create transaction init');
       const transaction = await this.arweaveStorage.createDataTransaction(name, name, 'name');
-      this.logger.trace({ transaction }, 'arwave: [plugin add] transaction @{transaction}');
+      this.logger.trace({ transaction }, 'arweave: [plugin add] transaction @{transaction}');
       const result = await this.arweaveStorage.sendTransaction(transaction);
       if(result.status != 200) {
-        this.logger.error({result},'arwave: [plugin add] send transaction error @{result}');
+        this.logger.error({result},'arweave: [plugin add] send transaction error @{result}');
         cb(getCode(result.status, result.statusText));
         return;
       }
       cb(null);
     })
     .catch((err) => {
-      this.logger.error('arwave: [plugin add] internal error');
+      this.logger.error('arweave: [plugin add] internal error');
       cb(getInternalError(err.message));
     });
   }
@@ -112,7 +110,7 @@ export default class ArweavePluginStorage implements IPluginStorage<ArweaveConfi
     onEnd: onEndSearchPackage,
     validateName: onValidatePackage
   ): void {
-    this.logger.warn('arwave: [plugin search] method has not been implemented yet');
+    this.logger.warn('arweave: [plugin search] method has not been implemented yet');
 
     onEnd(getServiceUnavailable('search not implemented yet'));
   }
@@ -123,9 +121,9 @@ export default class ArweavePluginStorage implements IPluginStorage<ArweaveConfi
    * @return {Error|*}
    */
   public remove(name: string, cb: Callback): void {
-    this.logger.warn({ name }, 'arwave: [plugin remove] has been disabled @{name}');
+    this.logger.warn({ name }, 'arweave: [plugin remove] has been disabled @{name}');
 
-    cb(getServiceUnavailable("remove method is disabled on Arwave. Your can't remove packages from the permaweb"));
+    cb(getServiceUnavailable("remove method is disabled on arweave. Your can't remove packages from the permaweb"));
   }
 
   /**
@@ -133,14 +131,14 @@ export default class ArweavePluginStorage implements IPluginStorage<ArweaveConfi
    * @return {Array}
    */
   public get(cb: Callback): void {
-    this.logger.debug('arwave: [plugin get] init');
+    this.logger.debug('arweave: [plugin get] init');
     this.arweaveStorage.getAllPackages(this.storageAddress)
     .then((names: string[]) => {
-      this.logger.trace({ names }, 'arwave: [plugin get] names @{names}');
+      this.logger.trace({ names }, 'arweave: [plugin get] names @{names}');
       cb(null, names);
     })
     .catch((err) => {
-      this.logger.error('arwave: [plugin get] internal error');
+      this.logger.error('arweave: [plugin get] internal error');
       cb(getInternalError(err.message));
     });
   }
@@ -165,19 +163,19 @@ export default class ArweavePluginStorage implements IPluginStorage<ArweaveConfi
    */
 
   public saveToken(token: Token): Promise<any> {
-    this.logger.warn({ token }, 'arwave: [plugin saveToken] has not been implemented yet @{token}');
+    this.logger.warn({ token }, 'arweave: [plugin saveToken] has not been implemented yet @{token}');
 
     return Promise.reject(getServiceUnavailable('save token method not implemented'));
   }
 
   public deleteToken(user: string, tokenKey: string): Promise<any> {
-    this.logger.warn({ tokenKey, user }, 'arwave: [plugin deleteToken] has not been implemented yet @{user}');
+    this.logger.warn({ tokenKey, user }, 'arweave: [plugin deleteToken] has not been implemented yet @{user}');
 
     return Promise.reject(getServiceUnavailable('delete token method not implemented'));
   }
 
   public readTokens(filter: TokenFilter): Promise<Token[]> {
-    this.logger.warn({ filter }, 'arwave: [plugin readTokens] has not been implemented yet @{filter}');
+    this.logger.warn({ filter }, 'arweave: [plugin readTokens] has not been implemented yet @{filter}');
 
     return Promise.reject(getServiceUnavailable('read tokens method not implemented'));
   }

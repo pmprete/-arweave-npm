@@ -84,7 +84,7 @@ describe('Arweave Storage', () => {
         mockArweave.arql.mockResolvedValue(Promise.resolve(txList));
         const dataFirst = 'name of the package from the first tx';
         const dataSecond = 'name of the package from the second tx';
-        mockArweave.transactions.getData.mockReturnValueOnce(Promise.resolve(dataFirst)).mockReturnValueOnce(Promise.resolve(dataSecond));
+        mockArweave.transactions.getData.mockReturnValueOnce(dataFirst).mockReturnValueOnce(dataSecond);
 
         const result = await arweaveStorage.getAllPackages('XcWOdj_-QzjhuU4RnmzByfUqt89C19AG-xRHzXUOZBg');
         console.log(result);

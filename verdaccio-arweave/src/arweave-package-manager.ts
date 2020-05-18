@@ -12,8 +12,6 @@ import {
 import { UploadTarball, ReadTarball } from "@verdaccio/streams";
 import { getNotFound, getConflict, getInternalError, VerdaccioError, getCode } from '@verdaccio/commons-api';
 
-import Arweave from 'arweave/node';
-import { and, or, equals } from 'arql-ops';
 import ArweaveStorage from "./arweave-storage";
 
 export const pkgFileName = 'package.json';
@@ -125,14 +123,14 @@ export default class ArweavePackageManager implements ILocalPackageManager {
     metadata: Package,
     cb: CallbackAction
   ): void { 
-    this.logger.debug({ name }, 'arwave: [createPackage] for @{name}');
+    this.logger.debug({ name }, 'arweave: [createPackage] for @{name}');
     this._getFileTx(name, pkgFileName)
       .then((txHash: string): void => {
         if (txHash) {
-          this.logger.debug({ name }, 'arwave: [createPackage] for @{name} has failed, it already exist');
+          this.logger.debug({ name }, 'arweave: [createPackage] for @{name} has failed, it already exist');
           cb(packageAlreadyExist(name));
         } else {
-          this.logger.debug({ name }, 'arwave: [createPackage] for @{name} on storage');
+          this.logger.debug({ name }, 'arweave: [createPackage] for @{name} on storage');
           this.savePackage(name, metadata, cb);
         }
       })
@@ -212,7 +210,7 @@ export default class ArweavePackageManager implements ILocalPackageManager {
                 fileBuffer = Buffer.concat(chunks);
 
                 let transaction = await this.storage.createDataTransaction(fileBuffer, this.packageName, name);
-                this.logger.trace({ transaction }, 'arwave: [_getFileTx] transaction @{transaction}');
+                this.logger.trace({ transaction }, 'arweave: [_getFileTx] transaction @{transaction}');
                 let result = await this.storage.sendTransaction(transaction);
                 if(result.status != 200) {
                   this.logger.error({name:name, err: result.statusText}, 'arweave: [writeTarball] @{name} has failed, cause: @{err}');
@@ -301,7 +299,7 @@ export default class ArweavePackageManager implements ILocalPackageManager {
   private async _savePackage(name: string, metadata: Package): Promise<void> {
     let tags = [ ['Package-Version', metadata["dist-tags"]['latest']] ];
     let transaction = await this.storage.createDataTransaction(this.convertToString(metadata), name, pkgFileName, tags);
-    this.logger.trace({ transaction }, 'arwave: [_savePackage] transaction @{transaction}');
+    this.logger.trace({ transaction }, 'arweave: [_savePackage] transaction @{transaction}');
     let result = await this.storage.sendTransaction(transaction);
     if(result.status != 200) {
       this.logger.error({name:name, err: result.statusText}, 'arweave: [_savePackage] @{name} has failed, cause: @{err}');

@@ -1,7 +1,7 @@
 {
-  "name": "verdaccio-arwave",
+  "name": "verdaccio-arweave",
   "version": "0.0.1",
-  "description": "Arwave storage plugin for verdaccio",
+  "description": "Arweave storage plugin for verdaccio",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
@@ -31,10 +31,10 @@
     "typescript": "^3.7.2"
   },
   "keywords": [
-    "arwave,npm,verdaccio,plugin,storage,datastore,permaweb,verdaccio-arwave"
+    "arweave,npm,verdaccio,plugin,storage,datastore,permaweb,verdaccio-arweave"
   ],
   "license": "MIT",
-  "repository": "pmprete/verdaccio-arwave",
+  "repository": "pmprete/verdaccio-arweave",
   "author": "Pedro Prete <pmprete@thinkanddev.com>",
   "scripts": {
     "release": "standard-version -a -s",

@@ -1,0 +1,90 @@
+{
+	"name": "solparse",
+	"versions": {
+		"2.2.8": {
+			"name": "solparse",
+			"version": "2.2.8",
+			"description": "PEG.js Solidity parser for Javascript",
+			"main": "index.js",
+			"scripts": {
+				"prepublish": "npm run build",
+				"build": "mkdir -p ./build && pegjs --cache -o ./build/parser.js ./solidity.pegjs && pegjs -o ./build/imports_parser.js ./imports.pegjs",
+				"test": "mocha --timeout 5000 --reporter spec",
+				"lint": "eslint index.js test/ cli.js"
+			},
+			"repository": {
+				"type": "git",
+				"url": "git+https://github.com/duaraghav8/solparse.git"
+			},
+			"bin": {
+				"solidity-parser": "cli.js"
+			},
+			"contributors": [
+				{
+					"name": "Tim Coulter",
+					"email": "tim@timothyjcoulter.com",
+					"url": "http://timothyjcoulter.com"
+				},
+				{
+					"name": "Raghav Dua",
+					"email": "duaraghav8@gmail.com",
+					"url": "http://raghavdua.com"
+				},
+				{
+					"name": "Federico Bond",
+					"email": "federicobond@gmail.com"
+				},
+				{
+					"name": "Christopher Gewecke",
+					"email": "christophergewecke@gmail.com"
+				}
+			],
+			"license": "MIT",
+			"dependencies": {
+				"mocha": "^7.1.2",
+				"pegjs": "^0.10.0",
+				"yargs": "^15.3.1"
+			},
+			"devDependencies": {
+				"mkdirp": "^1.0.4"
+			},
+			"readmeFilename": "README.md",
+			"gitHead": "dd24a634446216cacdce0d623f277321a1051dcf",
+			"bugs": {
+				"url": "https://github.com/duaraghav8/solparse/issues"
+			},
+			"homepage": "https://github.com/duaraghav8/solparse#readme",
+			"_id": "solparse@2.2.8",
+			"_nodeVersion": "10.16.3",
+			"_npmVersion": "6.14.5",
+			"maintainers": [
+				{}
+			],
+			"dist": {
+				"integrity": "sha512-CTGEG5QaZyNjsow2RQ1LXfIirRVHdJLK0OXhvh2RPGJZlEtv9kCEwrZ0qhMH91eQYGxwUHWpVOGZtGL0TOKK/A==",
+				"shasum": "f2b034f9d8367c551f6679e1afbdb26a6ca90160",
+				"tarball": "http://localhost:4873/solparse/-/solparse-2.2.8.tgz"
+			}
+		}
+	},
+	"time": {
+		"modified": "2020-05-17T22:51:28.268Z",
+		"created": "2020-05-17T22:51:28.268Z",
+		"2.2.8": "2020-05-17T22:51:28.268Z"
+	},
+	"users": {},
+	"dist-tags": {
+		"latest": "2.2.8"
+	},
+	"_uplinks": {},
+	"_distfiles": {},
+	"_attachments": {
+		"solparse-2.2.8.tgz": {
+			"shasum": "f2b034f9d8367c551f6679e1afbdb26a6ca90160",
+			"version": "2.2.8"
+		}
+	},
+	"_rev": "3-8282d8737563e701",
+	"_id": "solparse",
+	"readme": "# Solparse\n\nPegjs-based Parser for the Solidity Programming language.\n\nIt was originally a fork of [Consensys' solidity-parser](https://github.com/ConsenSys/solidity-parser) by Tim Coulter. @cgewecke, @duaraghav8 and @federicobond are co-authors.\n\n## Note\nSolparse is primarily meant for [Ethlint](https://github.com/duaraghav8/Ethlint). Because its sole purpose is to make life easier for the linter, we do not guarantee that there won't be any breaking changes, although we work hard to keep it friendly.\n\nIf you use solparse in your production systems, use it as a fixed dependency.\n\n### License\n\nMIT\n"
+}

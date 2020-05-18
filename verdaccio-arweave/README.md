@@ -1,6 +1,6 @@
-# verdaccio-arwave
+# verdaccio-arweave
 
-> Arwave storage plugin for verdaccio
+> Arweave storage plugin for verdaccio
 
 ---
 
