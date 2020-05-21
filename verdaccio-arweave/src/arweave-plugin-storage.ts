@@ -10,25 +10,39 @@ import {
   onEndSearchPackage,
   onSearchPackage,
   onValidatePackage,
-  StorageList
+  StorageList,
+  GenericBody,
+  Package
 } from '@verdaccio/types';
 import { getInternalError, getServiceUnavailable, getConflict, getCode } from '@verdaccio/commons-api';
 
-import { ArweaveConfig } from '../types/index';
-
-import ArweavePackageManager from './arweave-package-manager';
-
 import fs from 'fs';
 import Arweave from 'arweave/node';
+
 import ArweaveStorage from './arweave-storage';
+import { ArweaveConfig } from '../types/index';
+import ArweavePackageManager from './arweave-package-manager';
+
+export type PackageJsonFiles = {
+  [key: string]: Package;
+};
+
+export interface MemoryLocalStorage {
+  secret: string;
+  list: string[];
+  txHashList: GenericBody;
+  files: PackageJsonFiles;
+}
 
 export default class ArweavePluginStorage implements IPluginStorage<ArweaveConfig> {
   config: ArweaveConfig & Config;
   version?: string;
   arweaveStorage: ArweaveStorage;
   public logger: Logger;
-  private jwk: string;
+  public jwk: string;
   public storageAddress?: string;
+  private cache: MemoryLocalStorage;
+
 
   public constructor(
     config: ArweaveConfig & Config,
@@ -45,11 +59,12 @@ export default class ArweavePluginStorage implements IPluginStorage<ArweaveConfi
 
     let arweave = Arweave.init({
       host: this.config.host || 'arweave.net',
-      port: this.config.port || 433,
+      port: this.config.port,
       protocol: this.config.protocol || 'https',
       timeout: this.config.timeout || 20000,
       logging: this.config.logging || false,
     });
+    this.cache = this._createEmtpyDatabase();
     this.arweaveStorage = new ArweaveStorage(arweave, this.jwk);
   }
 
@@ -57,12 +72,12 @@ export default class ArweavePluginStorage implements IPluginStorage<ArweaveConfi
    *
    */
   public async getSecret(): Promise<string> {
-    return Promise.resolve(this.jwk);
+    return Promise.resolve(this.cache.secret);
   }
 
   public async setSecret(secret: string): Promise<any> {
     return new Promise((resolve): void => {
-      this.jwk = secret;
+      this.cache.secret = secret;
       resolve(null);
     });
   }
@@ -74,29 +89,11 @@ export default class ArweavePluginStorage implements IPluginStorage<ArweaveConfi
    */
   public add(name: string, cb: Callback): void {
     this.logger.debug({ name },'arweave: [plugin add] @{name} init');
-    this.arweaveStorage.getPackageTxByFileName(name, 'name', this.storageAddress)
-    .then(async (names: string[]) => {
-      this.logger.trace({ names }, 'arweave: [plugin add] look for names @{names}');
-      if(names[0]) {
-        this.logger.debug({ names }, 'arweave: [plugin add] already exists');
-        cb(null);
-        return;
-      }
-      this.logger.trace('arweave: [plugin add] create transaction init');
-      const transaction = await this.arweaveStorage.createDataTransaction(name, name, 'name');
-      this.logger.trace({ transaction }, 'arweave: [plugin add] transaction @{transaction}');
-      const result = await this.arweaveStorage.sendTransaction(transaction);
-      if(result.status != 200) {
-        this.logger.error({result},'arweave: [plugin add] send transaction error @{result}');
-        cb(getCode(result.status, result.statusText));
-        return;
-      }
-      cb(null);
-    })
-    .catch((err) => {
-      this.logger.error('arweave: [plugin add] internal error');
-      cb(getInternalError(err.message));
-    });
+    if (this.cache.list.indexOf(name) === -1) {
+      this.logger.debug({ name },'arweave: [plugin add] @{name} not on the list, adding it');
+      this.cache.list.push(name);
+    }
+    cb(null);
   }
 
   /**
@@ -132,13 +129,34 @@ export default class ArweavePluginStorage implements IPluginStorage<ArweaveConfi
    */
   public get(cb: Callback): void {
     this.logger.debug('arweave: [plugin get] init');
-    this.arweaveStorage.getAllPackages(this.storageAddress)
-    .then((names: string[]) => {
-      this.logger.trace({ names }, 'arweave: [plugin get] names @{names}');
-      cb(null, names);
+    this.logger.debug({cache:this.cache}, 'arweave: [plugin get] cache: @{cache}');
+    this.arweaveStorage.getAllPackagesHashes(this.storageAddress)
+    .then(async (txHashList: string[]) => {
+      this.logger.trace({ number: txHashList }, 'arweave: [plugin get] txHashList @{txHashList}');
+
+      const newTxHashList = txHashList.filter(txHash => !this.cache.txHashList[txHash]);
+      this.logger.trace({ newTxHashList }, 'arweave: [plugin get] newTxHashList @{newTxHashList}');
+      const newPkgsJsons = await Promise.all(newTxHashList.map((txHash) => { 
+        return this.arweaveStorage.getTransactionData(txHash, true)
+        .then((data) => {
+          return JSON.parse(String(data));
+        }); 
+      }));
+
+      for(let i=0; i < newTxHashList.length; i++) {
+
+        let pkgName = newPkgsJsons[i].name;
+        if (this.cache.list.indexOf(pkgName) === -1) {
+          this.cache.list.push(pkgName);
+        }
+        this.cache.txHashList[newTxHashList[i]] = pkgName;
+        this.cache.files[pkgName] = newPkgsJsons[i];
+      }
+      this.logger.trace({ names:this.cache.list }, 'arweave: [plugin get] names @{names}');
+      cb(null, this.cache.list);
     })
     .catch((err) => {
-      this.logger.error('arweave: [plugin get] internal error');
+      this.logger.error({err},'arweave: [plugin get] internal error @{err}');
       cb(getInternalError(err.message));
     });
   }
@@ -154,7 +172,7 @@ export default class ArweavePluginStorage implements IPluginStorage<ArweaveConfi
     if(!packageAddress) {
       packageAddress = this.storageAddress;
     }
-    return new ArweavePackageManager(packageName, this.logger, this.arweaveStorage, packageAddress);
+    return new ArweavePackageManager(packageName, this.logger, this.arweaveStorage, this.cache, packageAddress);
   }
 
   /**
@@ -180,4 +198,17 @@ export default class ArweavePluginStorage implements IPluginStorage<ArweaveConfi
     return Promise.reject(getServiceUnavailable('read tokens method not implemented'));
   }
 
+  private _createEmtpyDatabase(): MemoryLocalStorage {
+    const list: string[] = [];
+    const files = {};
+    const txHashList = {};
+    const emptyDatabase = {
+      list,
+      txHashList,
+      files,
+      secret: '',
+    };
+
+    return emptyDatabase;
+  }
 }

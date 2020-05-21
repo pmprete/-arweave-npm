@@ -1,3 +1,6 @@
+import path from 'path';
+import fs from 'fs';
+
 import { PluginOptions } from '@verdaccio/types';
 import { ArweaveConfig } from '../types';
 
@@ -75,12 +78,16 @@ describe('Arweave Plugin Storage', () => {
     const mockGetAllPackages = jest.fn();
     const mockGetPackageTxByFileName = jest.fn();
     const mockSendTransaction = jest.fn();
+    const mockCreateDataTransaction = jest.fn();
+    mockCreateDataTransaction.mockResolvedValue({id: '_MwkprJymcH-rB9doHh3zZqCQu4HAN_xMxkjQ2N3O9s'});
+    const mockGetTransactionData = jest.fn();
     const mockArweaveStorage = { 
-      getAllPackages: mockGetAllPackages,
+      getAllPackagesHashes: mockGetAllPackages,
       getPackageTxByFileName: mockGetPackageTxByFileName,
-      createDataTransaction: jest.fn(),
+      createDataTransaction: mockCreateDataTransaction,
       sendTransaction: mockSendTransaction,
       getTransaction: jest.fn(),
+      getTransactionData: mockGetTransactionData,
       runQuery: jest.fn(),
       arweave: jest.fn(),
       jwk: jest.fn()
@@ -94,12 +101,16 @@ describe('Arweave Plugin Storage', () => {
       arweavePluginStorage.get((err, data) => {
         expect(err).toBeNull();
         expect(data).toHaveLength(0);
+        
         mockGetPackageTxByFileName.mockReturnValueOnce(Promise.resolve([]));
         mockSendTransaction.mockReturnValueOnce(Promise.resolve({status:200}));
+
         arweavePluginStorage.add(pgkName, err => {
           expect(err).toBeNull();
 
-          mockGetAllPackages.mockReturnValueOnce(Promise.resolve([pgkName]));
+          mockGetAllPackages.mockReturnValueOnce(Promise.resolve([]));
+          //const pkgJson = fs.readFileSync(path.join(__dirname,'./__fixtures__/readme-test/package.json'));
+          //mockGetTransactionData.mockReturnValueOnce(Promise.resolve([pkgJson]));
 
           arweavePluginStorage.get((err, data) => {
             expect(err).toBeNull();

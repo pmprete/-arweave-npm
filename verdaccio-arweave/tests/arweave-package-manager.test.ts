@@ -8,6 +8,7 @@ import { generatePackage } from './__fixtures__/utils.helper';
 import { API_ERROR, VerdaccioError } from '@verdaccio/commons-api';
 
 import logger from './__mocks__/Logger';
+import { MemoryLocalStorage } from '../src/arweave-plugin-storage';
 const pkgFileName = 'package.json';
 
 jest.mock('../src/arweave-storage'); // ArweaveStorage is now a mock constructor
@@ -17,15 +18,30 @@ beforeAll(() => {
   ArweaveStorage.mockClear();
 });
 
+function _createEmtpyDatabase(): MemoryLocalStorage {
+  const list: string[] = [];
+  const files = {};
+  const txHashList = {};
+  const emptyDatabase = {
+    list,
+    txHashList,
+    files,
+    secret: '',
+  };
+
+  return emptyDatabase;
+}
+
 describe('Arweave Package Manager test', () => {
   describe('savePackage() group', () => {
     test('savePackage()', done => {
       const pkgName = 'savePkg1';
       const pkg = generatePackage(pkgName);
       const mockArweaveStorage = new ArweaveStorage();
+      mockArweaveStorage.createDataTransaction.mockResolvedValue({id:'_MwkprJymcH-rB9doHh3zZqCQu4HAN_xMxkjQ2N3O9s'});
       mockArweaveStorage.sendTransaction.mockResolvedValue({status:200, });
 
-      const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, undefined);
+      const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, _createEmtpyDatabase(), undefined);
 
       arweavePagckageManager.savePackage('pkg.1.0.0.tar.gz', pkg, err => {
         expect(err).toBeNull();
@@ -42,15 +58,15 @@ describe('Arweave Package Manager test', () => {
         const pkgJson = fs.readFileSync(path.join(__dirname,'./__fixtures__/readme-test/package.json'));
         const mockArweaveStorage = new ArweaveStorage();
         mockArweaveStorage.getPackageTxByFileName.mockResolvedValue(['hKMMPNh_emBf8v_at1tFzNYACisyMQNcKzeeE1QE9p8']);
-        const mockTransaction = { get: jest.fn(()=> pkgJson)} ;
-        mockArweaveStorage.getTransaction.mockResolvedValue(mockTransaction);
+        //const mockTransaction = { get: jest.fn(()=> pkgJson)} ;
+        mockArweaveStorage.getTransactionData.mockResolvedValue(pkgJson)//mockTransaction);
 
-        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, undefined);
+        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, _createEmtpyDatabase(), undefined);
 
         arweavePagckageManager.readPackage(pkgFileName, err => {
             expect(err).toBeNull();
             expect(mockArweaveStorage.getPackageTxByFileName).toHaveBeenCalledTimes(1);
-            expect(mockArweaveStorage.getTransaction).toHaveBeenCalledTimes(1);
+            expect(mockArweaveStorage.getTransactionData).toHaveBeenCalledTimes(1);
             done();
         });
     });
@@ -60,12 +76,12 @@ describe('Arweave Package Manager test', () => {
         const mockArweaveStorage = new ArweaveStorage();
         mockArweaveStorage.getPackageTxByFileName.mockResolvedValue([]);
 
-        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, undefined);
+        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, _createEmtpyDatabase(), undefined);
 
         arweavePagckageManager.readPackage(pkgFileName, err => {
             expect(err).toBeTruthy();
             expect(mockArweaveStorage.getPackageTxByFileName).toHaveBeenCalledTimes(1);
-            expect(mockArweaveStorage.getTransaction).toHaveBeenCalledTimes(0);
+            expect(mockArweaveStorage.getTransactionData).toHaveBeenCalledTimes(0);
             done();
         });
     });
@@ -75,14 +91,15 @@ describe('Arweave Package Manager test', () => {
         const mockArweaveStorage = new ArweaveStorage();
         mockArweaveStorage.getPackageTxByFileName.mockResolvedValue(['hKMMPNh_emBf8v_at1tFzNYACisyMQNcKzeeE1QE9p8']);
         const mockTransaction = { get: ()=>{throw new Error('transaction validation failed') }} ;
-        mockArweaveStorage.getTransaction.mockResolvedValue(mockTransaction);
+        mockArweaveStorage.getTransactionData.mockResolvedValue(mockTransaction);
 
-        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, undefined);
+        let cache = _createEmtpyDatabase();
+        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, cache, undefined);
 
         arweavePagckageManager.readPackage(pkgFileName, err => {
             expect(err).toBeTruthy();
             expect(mockArweaveStorage.getPackageTxByFileName).toHaveBeenCalledTimes(1);
-            expect(mockArweaveStorage.getTransaction).toHaveBeenCalledTimes(1);
+            expect(mockArweaveStorage.getTransactionData).toHaveBeenCalledTimes(1);
             done();
         });
     });
@@ -93,15 +110,18 @@ describe('Arweave Package Manager test', () => {
         const pkgName = 'createPackage';
         const pkg = generatePackage('createPackage');
         const mockArweaveStorage = new ArweaveStorage();
-        mockArweaveStorage.getPackageTxByFileName.mockResolvedValue([]);
-        mockArweaveStorage.sendTransaction.mockResolvedValue({status:200});
+        //mockArweaveStorage.createDataTransaction.mockResolvedValue({id:'_MwkprJymcH-rB9doHh3zZqCQu4HAN_xMxkjQ2N3O9s'});
+        mockArweaveStorage.getPackageTxByFileNameAndVersion.mockResolvedValue([]);
+        //mockArweaveStorage.sendTransaction.mockResolvedValue({status:200});
 
-        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, undefined);
+        let cache = _createEmtpyDatabase();
+        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, cache, undefined);
 
         arweavePagckageManager.createPackage(pkgName, pkg, err => {
             expect(err).toBeNull();
-            expect(mockArweaveStorage.createDataTransaction).toHaveBeenCalledTimes(1);
-            expect(mockArweaveStorage.sendTransaction).toHaveBeenCalledTimes(1);
+            expect(cache.files[pkgName]).toBe(pkg);
+            // expect(mockArweaveStorage.createDataTransaction).toHaveBeenCalledTimes(1);
+            // expect(mockArweaveStorage.sendTransaction).toHaveBeenCalledTimes(1);
             done();
         });
     });
@@ -110,15 +130,18 @@ describe('Arweave Package Manager test', () => {
         const pkgName = 'createPackage';
         const pkg = generatePackage('createPackage');
         const mockArweaveStorage = new ArweaveStorage();
-        mockArweaveStorage.getPackageTxByFileName.mockResolvedValue([]);
-        mockArweaveStorage.sendTransaction.mockResolvedValue({status:200});
+        //mockArweaveStorage.createDataTransaction.mockResolvedValue({id:'_MwkprJymcH-rB9doHh3zZqCQu4HAN_xMxkjQ2N3O9s'});
+        mockArweaveStorage.getPackageTxByFileNameAndVersion.mockResolvedValue([]);
+        //mockArweaveStorage.sendTransaction.mockResolvedValue({status:200});
 
-        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, undefined);
+        let cache = _createEmtpyDatabase();
+        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, cache, undefined);
 
         arweavePagckageManager.createPackage(pkgName, pkg, err => {
             expect(err).toBeTruthy();
-            expect(mockArweaveStorage.createDataTransaction).toHaveBeenCalledTimes(1);
-            expect(mockArweaveStorage.sendTransaction).toHaveBeenCalledTimes(1);
+            expect(cache.files[pkgName]).toBe(pkg);
+            // expect(mockArweaveStorage.createDataTransaction).toHaveBeenCalledTimes(1);
+            // expect(mockArweaveStorage.sendTransaction).toHaveBeenCalledTimes(1);
             done();
         });
 
@@ -129,7 +152,7 @@ describe('Arweave Package Manager test', () => {
         const mockArweaveStorage = new ArweaveStorage();
         // verdaccio removes the package.json instead the package name
         const pkgName = 'package.json';
-        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, undefined);
+        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, _createEmtpyDatabase(), undefined);
         
         arweavePagckageManager.deletePackage(pkgName, err => {
           expect(err).toBeTruthy();
@@ -143,7 +166,7 @@ describe('Arweave Package Manager test', () => {
     test('removePackage()', done => {
         const mockArweaveStorage = new ArweaveStorage();
         const pkgName = 'remove-package';
-        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, undefined);
+        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, _createEmtpyDatabase(), undefined);
 
         arweavePagckageManager.removePackage(error => {
             expect(error).toBeTruthy();
@@ -161,7 +184,7 @@ describe('Arweave Package Manager test', () => {
         const mockTransaction = { get: jest.fn(()=> pkgTarball)} ;
         mockArweaveStorage.getTransaction.mockResolvedValue(mockTransaction);
 
-        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, undefined);
+        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, _createEmtpyDatabase(), undefined);
 
         const readTarballStream = arweavePagckageManager.readTarball('test-readme-0.0.0.tgz');
 
@@ -189,7 +212,7 @@ describe('Arweave Package Manager test', () => {
         const mockArweaveStorage = new ArweaveStorage();
         mockArweaveStorage.getPackageTxByFileName.mockResolvedValue([]);
 
-        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, undefined);
+        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, _createEmtpyDatabase(), undefined);
         const readTarballStream = arweavePagckageManager.readTarball('file-does-not-exist0.0.0.tgz');
 
         readTarballStream.on('error', function (err) {
@@ -207,9 +230,10 @@ describe('Arweave Package Manager test', () => {
 
         const mockArweaveStorage = new ArweaveStorage();
         mockArweaveStorage.getPackageTxByFileName.mockResolvedValue([]);
+        mockArweaveStorage.createDataTransaction.mockResolvedValue({id:'_MwkprJymcH-rB9doHh3zZqCQu4HAN_xMxkjQ2N3O9s'});
         mockArweaveStorage.sendTransaction.mockResolvedValue({status:200});
 
-        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, undefined);
+        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, _createEmtpyDatabase(), undefined);
         const writeTarballStream = arweavePagckageManager.writeTarball(newFileName);
 
         writeTarballStream.on('success', function () {
@@ -249,9 +273,10 @@ describe('Arweave Package Manager test', () => {
 
         const mockArweaveStorage = new ArweaveStorage();
         mockArweaveStorage.getPackageTxByFileName.mockResolvedValue([]);
+        mockArweaveStorage.createDataTransaction.mockResolvedValue({id:'_MwkprJymcH-rB9doHh3zZqCQu4HAN_xMxkjQ2N3O9s'});
         mockArweaveStorage.sendTransaction.mockResolvedValue({status:200});
 
-        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, undefined);
+        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, _createEmtpyDatabase(), undefined);
         const writeTarballStream = arweavePagckageManager.writeTarball(newFileName);
 
 
@@ -276,10 +301,10 @@ describe('Arweave Package Manager test', () => {
         const pkgJson = fs.readFileSync(path.join(__dirname,'./__fixtures__/readme-test/package.json'));
         const mockArweaveStorage = new ArweaveStorage();
         mockArweaveStorage.getPackageTxByFileName.mockResolvedValue(['hKMMPNh_emBf8v_at1tFzNYACisyMQNcKzeeE1QE9p8']);
-        const mockTransaction = { get: jest.fn(()=> pkgJson)} ;
-        mockArweaveStorage.getTransaction.mockResolvedValue(mockTransaction);
+        //const mockTransaction = { get: jest.fn(()=> pkgJson)} ;
+        mockArweaveStorage.getTransactionData.mockResolvedValue(pkgJson)//mockTransaction);
 
-        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, undefined);
+        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, _createEmtpyDatabase(), undefined);
 
         let updateHandler = jest.fn((name, cb) => {
             cb();
@@ -312,7 +337,7 @@ describe('Arweave Package Manager test', () => {
         const mockArweaveStorage = new ArweaveStorage();
         mockArweaveStorage.getPackageTxByFileName.mockResolvedValue([]);
 
-        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, undefined);
+        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, _createEmtpyDatabase(), undefined);
 
         let updateHandler = jest.fn();
         let onWrite = jest.fn();
@@ -334,10 +359,10 @@ describe('Arweave Package Manager test', () => {
         const pkgJson = fs.readFileSync(path.join(__dirname,'./__fixtures__/readme-test/package.json'));
         const mockArweaveStorage = new ArweaveStorage();
         mockArweaveStorage.getPackageTxByFileName.mockResolvedValue(['hKMMPNh_emBf8v_at1tFzNYACisyMQNcKzeeE1QE9p8']);
-        const mockTransaction = { get: jest.fn(()=> pkgJson)} ;
-        mockArweaveStorage.getTransaction.mockResolvedValue(mockTransaction);
+        //const mockTransaction = { get: jest.fn(()=> pkgJson)} ;
+        mockArweaveStorage.getTransactionData.mockResolvedValue(pkgJson)//mockTransaction);
 
-        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, undefined);
+        const arweavePagckageManager = new ArweavePackageManager(pkgName, logger, mockArweaveStorage, _createEmtpyDatabase(), undefined);
 
         let updateHandler = jest.fn((_name, cb) => {
           cb(new Error('Something is wrong'));

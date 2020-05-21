@@ -15,9 +15,9 @@ store:
   arweave:
     jwk: /verdaccio/conf/arweave-keyfile.json # path to jwk used to publish packages
     host: arweave.net   # Hostname or IP address for a Arweave host
-    port: 433     # Port
+    #port: 433     # Port
     protcol: https    # Network protocol http or https
-    storageAddress: aNTVAabBqoXGoUjIO-qfgzzAts7Qxt9uTcO9W8n9efo    # Set this if you to retrieve all packages from this specific address
+    #storageAddress: aNTVAabBqoXGoUjIO-qfgzzAts7Qxt9uTcO9W8n9efo    # Set this if you to retrieve all packages from this specific address
     timeout: 20000            # Network request timeouts in milliseconds
     logging: true         # Network logging
 

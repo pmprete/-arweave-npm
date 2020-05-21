@@ -55,6 +55,7 @@ describe('Arweave Storage', () => {
             statusText: 'OK',
         };
         mockArweave.transactions.post.mockResolvedValue(Promise.resolve(response));
+        mockArweave.transactions.getStatus.mockResolvedValue(Promise.resolve(response));
 
         const result = await arweaveStorage.sendTransaction(transaction);
 
@@ -64,7 +65,16 @@ describe('Arweave Storage', () => {
     test('should createDataTransaction', async () => {
         mockArweave.createTransaction.mockResolvedValue(Promise.resolve(transaction));
 
-        const result = await arweaveStorage.createDataTransaction('data to send', 'jquery','package.json', [['Package-Version','2.1.4']]);
+        const result = await arweaveStorage.createDataTransaction('application/octet-stream', 'data to send', 'jquery','package.json');
+
+        expect(result).toBeTruthy();
+        expect(mockArweave.createTransaction).toHaveBeenCalledTimes(1);
+    });
+
+    test('should createDataTransaction with tags', async () => {
+        mockArweave.createTransaction.mockResolvedValue(Promise.resolve(transaction));
+
+        const result = await arweaveStorage.createDataTransaction('application/octet-stream', 'data to send', 'jquery','package.json', [['Package-Version', '2.1.4']]);
 
         expect(result).toBeTruthy();
         expect(mockArweave.createTransaction).toHaveBeenCalledTimes(1);
@@ -79,17 +89,13 @@ describe('Arweave Storage', () => {
         expect(result).toBe(txList);
     });
 
-    test('should getAllPackages', async () => {
+    test('should getAllPackagesHashes', async () => {
         let txList = ['IFpLpXLbDaPMYjrTRe8r9Q0Nj2dVqdbZJKOYK8aD6sA','Lx0MKOXhwbM2gpCEPtAM5FfL4_cYDWIt8FsodPE566g'];
         mockArweave.arql.mockResolvedValue(Promise.resolve(txList));
-        const dataFirst = 'name of the package from the first tx';
-        const dataSecond = 'name of the package from the second tx';
-        mockArweave.transactions.getData.mockReturnValueOnce(dataFirst).mockReturnValueOnce(dataSecond);
 
-        const result = await arweaveStorage.getAllPackages('XcWOdj_-QzjhuU4RnmzByfUqt89C19AG-xRHzXUOZBg');
-        console.log(result);
-        expect(result[0]).toBe(dataFirst);
-        expect(result[1]).toBe(dataSecond);
+        const result = await arweaveStorage.getAllPackagesHashes('XcWOdj_-QzjhuU4RnmzByfUqt89C19AG-xRHzXUOZBg');
+        expect(result[0]).toBe(txList[0]);
+        expect(result[1]).toBe(txList[1]);
     });
 
 });
