@@ -24,6 +24,15 @@ npm publish --registry http://localhost:4873
 
 Refresh the page and you should see your package :)
 
+Examples of deployed packages:
+- arweave-js
+  - package.json: https://viewblock.io/arweave/tx/CkN-GaNu7PTSPfxwabBU_2GxgU6v0SN3joUZsODjMKg
+  - tarball: https://viewblock.io/arweave/tx/1UyJ_CGZXhrMBINGeqi7RsHC4QWP81FKfEEwCUI2pc8
+- solparse
+  - package.json: https://viewblock.io/arweave/tx/FRyXRM439sGk7zGIr6u2X6KHvuPgNRbVQzPhp0Nc8eU
+  - tarball: https://viewblock.io/arweave/tx/dch09mCJYqc0YxXnAnG7Y-J2psPV9koEQwXcAguZGog
+
+To see the Tx Hashes of the deployed dependencies see the log form the docker container
 
 ## Arquitecture
 The plugin is divided in 3 parts:
