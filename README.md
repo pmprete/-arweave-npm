@@ -4,7 +4,7 @@
 I created a [Verdaccio](https://verdaccio.org/) storage plugin to publish and read npm packages frmo [Arweave](https://www.arweave.org/).
 
 ## How to run it
-Move your jwk file to [./verdaccio-docker/config](./verdaccio-docker/config) and rename it as `arweave-keyfile.json`. This is important as this is the jwk that will be used to sign the transactions when publishing an npm package in arweave.
+Move your jwk file to [./verdaccio-docker/conf](./verdaccio-docker/conf) and rename it as `arweave-keyfile.json`. This is important as this is the jwk that will be used to sign the transactions when publishing an npm package in arweave.
 
 To set up the enviroment just run
 
