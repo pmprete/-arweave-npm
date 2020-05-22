@@ -4,6 +4,8 @@
 I created a [Verdaccio](https://verdaccio.org/) storage plugin to publish and read npm packages frmo [Arweave](https://www.arweave.org/).
 
 ## How to run it
+Move your jwk file to [./verdaccio-docker/config](./verdaccio-docker/config) and rename it as `arweave-keyfile.json`. This is important as this is the jwk that will be used to sign the transactions when publishing an npm package in arweave.
+
 To set up the enviroment just run
 
 ```bash
@@ -25,7 +27,7 @@ Refresh the page and you should see your package :)
 
 ## Arquitecture
 The plugin is divided in 3 parts:
-- arweave-plugin-storage: It's in charge of the initialization and the one that retrieves all the packages and adds private packes and removes package (of course this can't be done in the arweave)
+- arweave-plugin-storage: It's in charge of the initialization and retriving all the packages and adds and removes package private packages (of course this can't be done in the arweave)
 - arweave-package-manager: It creates and reads the package.json and tarball files.
 - arweave-storage: Abstraction layer that uses arweave-js to comunicate with Arweave
 
